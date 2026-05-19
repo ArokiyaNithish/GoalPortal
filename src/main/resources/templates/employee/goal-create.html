@@ -17,7 +17,7 @@
                     <span class="weightage-value" th:text="${remainingWeightage} + '%'">0%</span>
                 </div>
                 <div class="progress-wrap">
-                    <div class="progress-bar primary" th:style="'width:' + (100 - remainingWeightage) + '%'"></div>
+                    <div class="progress-bar primary" th:style="|width: ${100 - remainingWeightage}%|"></div>
                 </div>
             </div>
 
