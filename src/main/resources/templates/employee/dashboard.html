@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html th:replace="~{layout :: layout('Employee Dashboard', ~{::div.content})}">
+<body>
+<div class="content">
+
+    <!-- Timing Widget -->
+    <div class="card mb-4">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="card-title">Cycle Timing & Tracking</h3>
+            <div id="liveClock" class="font-bold text-primary text-xl"></div>
+        </div>
+        <div class="card-body">
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <div style="flex: 1;">
+                    <div class="text-sm text-muted mb-1">Time Remaining in Cycle</div>
+                    <div class="progress-bar-container" style="background: #e5e7eb; border-radius: 8px; height: 20px; width: 100%; overflow: hidden;">
+                        <div class="progress-bar" style="background: #3b82f6; width: 65%; height: 100%;" id="cycleProgress"></div>
+                    </div>
+                    <div class="text-xs text-muted mt-1" id="cycleCountdown">145 Days Left</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon primary"><i class="fa-solid fa-bullseye"></i></div>
+            </div>
+            <div class="stat-value" th:text="${goals.size()}">0</div>
+            <div class="stat-label">Total Goals</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon success"><i class="fa-solid fa-check-double"></i></div>
+            </div>
+            <div class="stat-value" th:text="${approvedCount}">0</div>
+            <div class="stat-label">Approved</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon warning"><i class="fa-solid fa-hourglass-half"></i></div>
+            </div>
+            <div class="stat-value" th:text="${pendingCount}">0</div>
+            <div class="stat-label">Pending Approval</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon purple"><i class="fa-solid fa-scale-unbalanced"></i></div>
+            </div>
+            <div class="stat-value" th:classappend="${totalWeightage == 100 ? 'text-success' : 'text-danger'}">
+                <span th:text="${#numbers.formatDecimal(totalWeightage, 1, 1)}">0.0</span>%
+            </div>
+            <div class="stat-label">Total Weightage</div>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="chart-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+        
+        <!-- Live Performance Graph -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Live Performance Tracking</h3>
+            </div>
+            <div class="card-body chart-container">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Radar Visualization -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Thrust Area Analysis</h3>
+            </div>
+            <div class="card-body chart-container">
+                <canvas id="radarChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Calendar Tracking -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Key Dates & Calendar</h3>
+            </div>
+            <div class="card-body">
+                <div class="calendar-widget">
+                    <div style="display:flex; justify-content:space-between; margin-bottom: 10px;">
+                        <span class="font-bold" id="currentMonthStr">May 2026</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; font-size: 0.8rem; margin-bottom: 5px;" class="font-bold text-muted">
+                        <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+                    </div>
+                    <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; font-size: 0.9rem;">
+                        <!-- JS injected -->
+                    </div>
+                </div>
+                <div class="mt-4 text-sm">
+                    <div class="mb-2"><span style="display:inline-block; width:10px; height:10px; background:#10B981; border-radius:50%; margin-right:5px;"></span> Check-in Window Open</div>
+                    <div><span style="display:inline-block; width:10px; height:10px; background:#EF4444; border-radius:50%; margin-right:5px;"></span> Cycle End Deadline</div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        document.addEventListener('DOMContentLoaded', () => {
+            // Clock & Timing logic
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('liveClock').innerText = now.toLocaleTimeString();
+            }, 1000);
+
+            // Live Performance Chart (Line Chart with simulated live data)
+            const ctxPerf = document.getElementById('performanceChart').getContext('2d');
+            const perfChart = new Chart(ctxPerf, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+                    datasets: [{
+                        label: 'Completion %',
+                        data: [20, 35, 45, 60, 75],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Radar Chart for Data Visualization (Thrust Areas)
+            const ctxRadar = document.getElementById('radarChart').getContext('2d');
+            new Chart(ctxRadar, {
+                type: 'radar',
+                data: {
+                    labels: ['Quality', 'Delivery', 'Safety', 'Learning', 'Efficiency'],
+                    datasets: [{
+                        label: 'Target',
+                        data: [90, 80, 100, 70, 85],
+                        borderColor: '#9CA3AF',
+                        backgroundColor: 'rgba(156, 163, 175, 0.2)'
+                    }, {
+                        label: 'Actual',
+                        data: [85, 75, 100, 60, 90],
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.4)'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Calendar Widget Logic
+            const calGrid = document.getElementById('calendarGrid');
+            const today = new Date();
+            let calHtml = '';
+            // Generate some dummy empty days for alignment (assuming month starts on Friday for demo)
+            for(let i=0; i<5; i++) { calHtml += '<div></div>'; }
+            for(let d=1; d<=31; d++) {
+                let style = 'padding: 5px; border-radius: 4px;';
+                if(d === today.getDate()) {
+                    style += ' background: #3b82f6; color: white; font-weight: bold;';
+                } else if(d === 15) {
+                    style += ' background: #10B981; color: white;'; // check-in
+                } else if(d === 30) {
+                    style += ' background: #EF4444; color: white;'; // deadline
+                }
+                calHtml += `<div style="${style}">${d}</div>`;
+            }
+            calGrid.innerHTML = calHtml;
+            document.getElementById('currentMonthStr').innerText = today.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+            // Simulate live graph update every 5 seconds
+            setInterval(() => {
+                if(perfChart.data.datasets[0].data.length > 10) {
+                    perfChart.data.datasets[0].data.shift();
+                    perfChart.data.labels.shift();
+                }
+                const nextVal = Math.min(100, perfChart.data.datasets[0].data[perfChart.data.datasets[0].data.length-1] + (Math.random() * 5));
+                perfChart.data.datasets[0].data.push(nextVal);
+                perfChart.data.labels.push('Now');
+                perfChart.update();
+            }, 5000);
+        });
+        /*]]>*/
+    </script>
+</div>
+</body>
+</html>

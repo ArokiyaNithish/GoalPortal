@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html th:replace="~{layout :: layout('Pending Goal Approvals', ~{::div.content})}">
+<body>
+<div class="content">
+
+    <div class="card mb-6">
+        <div class="card-header">
+            <h3 class="card-title">Goals Awaiting Approval</h3>
+            <div class="badge badge-warning" th:text="${totalPending} + ' Goals'">0 Goals</div>
+        </div>
+        
+        <div class="card-body p-0">
+            
+            <div th:if="${goalsByEmployee.isEmpty()}" class="empty-state">
+                <div class="empty-state-icon text-success"><i class="fa-solid fa-check-circle"></i></div>
+                <div class="empty-state-title">All Caught Up!</div>
+                <div class="empty-state-text">There are no goals pending your approval at this time.</div>
+            </div>
+
+            <!-- Grouped by Employee -->
+            <div th:each="entry : ${goalsByEmployee}" class="employee-goal-group border-bottom" th:unless="${goalsByEmployee.isEmpty()}" style="border-bottom: 1px solid var(--border);">
+                
+                <div class="p-4 bg-gray-50 border-b border-gray-200" style="background:var(--bg-secondary); border-bottom:1px solid var(--border-light);">
+                    <div class="d-flex align-center gap-3">
+                        <div class="user-avatar avatar-employee" th:text="${#strings.substring(entry.key.name,0,1)}">U</div>
+                        <div>
+                            <div class="font-bold text-lg" th:text="${entry.key.name}">Employee Name</div>
+                            <div class="text-sm text-muted" th:text="${entry.value.size()} + ' goals submitted'">X goals</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Goal Details</th>
+                                <th>UoM</th>
+                                <th>Target</th>
+                                <th>Weightage</th>
+                                <th class="text-right" style="min-width:180px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="goal : ${entry.value}" class="goal-card">
+                                <td>
+                                    <div class="font-bold text-sm" th:text="${goal.title}">Title</div>
+                                    <div class="text-xs text-muted" th:text="${goal.thrustArea}">Area</div>
+                                    <div class="text-xs mt-1" th:text="${goal.description}">Desc</div>
+                                    <div th:if="${goal.shared}" class="badge badge-purple mt-1 text-xs"><i class="fa-solid fa-share-nodes"></i> Shared KPI</div>
+                                </td>
+                                <td>
+                                    <span class="font-bold text-sm" th:text="${goal.uomType}">TYPE</span>
+                                    <span class="text-xs text-muted" th:if="${goal.uomDirection}" th:text="'(' + ${goal.uomDirection} + ')'">(MIN)</span>
+                                </td>
+                                
+                                <!-- TARGET COLUMN (View/Edit) -->
+                                <td>
+                                    <!-- View Mode -->
+                                    <div class="view-mode font-bold text-primary" th:if="${goal.uomType.name() != 'TIMELINE'}" th:text="${goal.target}">100</div>
+                                    <div class="view-mode font-bold text-primary" th:if="${goal.uomType.name() == 'TIMELINE'}" th:text="${#temporals.format(goal.targetDate, 'dd MMM yyyy')}">Date</div>
+                                    
+                                    <!-- Edit Mode -->
+                                    <div class="edit-mode" style="display:none;">
+                                        <form th:action="@{'/manager/goals/edit-approve/' + ${goal.id}}" method="post" th:id="'editForm-' + ${goal.id}">
+                                            <input th:if="${goal.uomType.name() != 'TIMELINE'}" type="number" step="0.01" name="newTarget" class="form-control form-control-sm mb-2" th:value="${goal.target}">
+                                            <input th:if="${goal.uomType.name() == 'TIMELINE'}" type="text" class="form-control form-control-sm mb-2 disabled" disabled value="Cannot edit date">
+                                        </form>
+                                    </div>
+                                </td>
+                                
+                                <!-- WEIGHTAGE COLUMN (View/Edit) -->
+                                <td>
+                                    <!-- View Mode -->
+                                    <div class="view-mode font-bold text-lg" th:text="${goal.weightage} + '%'">10%</div>
+                                    
+                                    <!-- Edit Mode -->
+                                    <div class="edit-mode" style="display:none;">
+                                        <input type="number" step="0.5" form="'editForm-' + ${goal.id}" name="newWeightage" class="form-control form-control-sm" th:value="${goal.weightage}">
+                                    </div>
+                                </td>
+                                
+                                <!-- ACTION COLUMN -->
+                                <td class="text-right">
+                                    
+                                    <!-- View Mode Actions -->
+                                    <div class="view-mode d-flex gap-2 justify-end">
+                                        <!-- Inline Edit Toggle -->
+                                        <button type="button" class="btn btn-outline btn-icon btn-inline-edit" title="Edit inline"><i class="fa-solid fa-pen"></i></button>
+                                        
+                                        <!-- Return form -->
+                                        <form th:action="@{'/manager/goals/return/' + ${goal.id}}" method="post" style="display:inline;" onsubmit="return confirmReturn(this)">
+                                            <input type="hidden" name="remark" class="return-remark">
+                                            <button type="button" class="btn btn-danger btn-icon" title="Return for Rework" onclick="promptReturn(this)"><i class="fa-solid fa-rotate-left"></i></button>
+                                        </form>
+
+                                        <!-- Direct Approve -->
+                                        <form th:action="@{'/manager/goals/approve/' + ${goal.id}}" method="post" style="display:inline;">
+                                            <button type="submit" class="btn btn-success btn-icon" title="Approve"><i class="fa-solid fa-check"></i></button>
+                                        </form>
+                                    </div>
+                                    
+                                    <!-- Edit Mode Actions -->
+                                    <div class="edit-mode d-flex flex-column gap-2" style="display:none;">
+                                        <textarea form="'editForm-' + ${goal.id}" name="remark" class="form-control text-xs" placeholder="Add remark..." style="min-height:40px; padding:4px 8px;"></textarea>
+                                        <div class="d-flex gap-2 justify-end mt-1">
+                                            <button type="button" class="btn btn-ghost btn-sm btn-cancel-edit"><i class="fa-solid fa-xmark"></i> Cancel</button>
+                                            <button type="submit" form="'editForm-' + ${goal.id}" class="btn btn-success btn-sm"><i class="fa-solid fa-check-double"></i> Save & Approve</button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+    <script>
+        function promptReturn(btn) {
+            const remark = prompt("Please provide a reason for returning this goal:");
+            if(remark && remark.trim() !== "") {
+                const form = btn.closest('form');
+                form.querySelector('.return-remark').value = remark;
+                form.submit();
+            }
+        }
+    </script>
+</div>
+</body>
+</html>

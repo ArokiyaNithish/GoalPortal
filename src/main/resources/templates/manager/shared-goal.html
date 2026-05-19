@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html th:replace="~{layout :: layout('Push Shared Goal', ~{::div.content})}">
+<body>
+<div class="content">
+
+    <div class="card mb-6" style="max-width: 900px; margin: 0 auto;">
+        <div class="card-header">
+            <h3 class="card-title">Push KPI to Team Members</h3>
+        </div>
+        
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fa-solid fa-circle-info mt-1"></i>
+                <div>
+                    <strong>Shared Goals:</strong> Select an approved goal from your own goal sheet and push it to multiple team members. They will receive it as a read-only KPI where only the weightage can be adjusted.
+                </div>
+            </div>
+
+            <form th:action="@{/manager/shared-goal/push}" method="post">
+                
+                <div class="form-group mt-4">
+                    <label class="form-label">Select Source KPI (from your approved goals) <span class="required">*</span></label>
+                    <select name="sourceGoalId" class="form-select" required>
+                        <option value="">-- Select Goal --</option>
+                        <option th:each="goal : ${approvedGoals}" th:value="${goal.id}" th:text="${goal.title} + ' [' + ${goal.uomType} + ' : ' + ${goal.target} + ']'"></option>
+                    </select>
+                    <div th:if="${approvedGoals.isEmpty()}" class="form-error mt-2">
+                        You do not have any approved goals to share. Create and approve your own goals first.
+                    </div>
+                </div>
+
+                <div class="form-group mt-4" th:unless="${approvedGoals.isEmpty()}">
+                    <label class="form-label">Select Target Employees <span class="required">*</span></label>
+                    <div class="border rounded p-3" style="border: 1px solid var(--border); border-radius: var(--radius-sm); max-height: 250px; overflow-y: auto;">
+                        <div th:each="member : ${team}" class="d-flex align-center gap-3 mb-2 p-2" style="background:var(--bg-secondary); border-radius:4px;">
+                            <input type="checkbox" name="targetUserIds" th:value="${member.id}" th:id="'emp-' + ${member.id}" style="width:16px;height:16px;">
+                            <label th:for="'emp-' + ${member.id}" class="d-flex align-center gap-3 flex-1" style="cursor:pointer; margin:0;">
+                                <div class="user-avatar avatar-employee" style="width:28px;height:28px;font-size:11px;" th:text="${#strings.substring(member.name,0,1)}">U</div>
+                                <div>
+                                    <div class="font-bold text-sm" th:text="${member.name}">Name</div>
+                                    <div class="text-xs text-muted" th:text="${member.designation}">Role</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-end mt-4" th:unless="${approvedGoals.isEmpty()}">
+                    <button type="submit" class="btn btn-purple"><i class="fa-solid fa-share-nodes"></i> Push KPI to Selected</button>
+                </div>
+            </form>
+            
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

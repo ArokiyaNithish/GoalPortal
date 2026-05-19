@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html th:replace="~{layout :: layout('Team Member Check-ins', ~{::div.content})}">
+<body>
+<div class="content">
+
+    <div class="card mb-6">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Quarterly Check-in Status</h3>
+                <div class="card-subtitle mt-1" th:text="${currentQuarter} + ' ' + ${currentYear}">Q1 2025</div>
+            </div>
+        </div>
+        
+        <div class="card-body p-0">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Team Member</th>
+                            <th>Total Goals</th>
+                            <th>Approved Goals</th>
+                            <th>Q-Score Avg</th>
+                            <th class="text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="data : ${teamData}">
+                            <td>
+                                <div class="d-flex align-center gap-3">
+                                    <div class="user-avatar avatar-employee" style="width:36px;height:36px;font-size:14px;" th:text="${#strings.substring(data.employee.name,0,1)}">U</div>
+                                    <div>
+                                        <div class="font-bold text-sm" th:text="${data.employee.name}">Name</div>
+                                        <div class="text-xs text-muted" th:text="${data.employee.designation}">Role</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td th:text="${data.goalCount}">0</td>
+                            <td>
+                                <span class="badge" th:classappend="${data.approvedCount == data.goalCount and data.goalCount > 0 ? 'badge-success' : 'badge-warning'}" th:text="${data.approvedCount} + ' / ' + ${data.goalCount}">0 / 0</span>
+                            </td>
+                            <td>
+                                <div class="font-bold" th:classappend="${T(java.lang.Double).parseDouble(data.avgProgressScore) >= 100.0 ? 'text-success' : (T(java.lang.Double).parseDouble(data.avgProgressScore) >= 50.0 ? 'text-warning' : 'text-danger')}" th:text="${data.avgProgressScore} + '%'">0.0%</div>
+                                <div class="progress-wrap mt-1" style="max-width:100px;">
+                                    <div class="progress-bar" 
+                                         th:classappend="${T(java.lang.Double).parseDouble(data.avgProgressScore) >= 100.0 ? 'success' : (T(java.lang.Double).parseDouble(data.avgProgressScore) >= 50.0 ? 'warning' : 'danger')}"
+                                         th:style="'width:' + ${data.avgProgressScore} + '%'"></div>
+                                </div>
+                            </td>
+                            <td class="text-right">
+                                <a th:href="@{'/manager/checkin/' + ${data.employee.id}}" class="btn btn-outline btn-sm">
+                                    Review Check-ins <i class="fa-solid fa-arrow-right ml-1"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

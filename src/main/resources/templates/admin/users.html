@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html th:replace="~{layout :: layout('User Management', ~{::div.content})}">
+<body>
+<div class="content">
+
+    <div class="card mb-6" style="max-width: 900px; margin: 0 auto;">
+        <div class="card-header">
+            <h3 class="card-title">Add New User</h3>
+        </div>
+        
+        <div class="card-body">
+            <form th:action="@{/admin/users/create}" method="post">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Full Name <span class="required">*</span></label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address <span class="required">*</span></label>
+                        <input type="email" name="email" class="form-control" required placeholder="user@atomquest.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Initial Password <span class="required">*</span></label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">System Role <span class="required">*</span></label>
+                        <select name="role" class="form-select" required id="roleSelect">
+                            <option value="EMPLOYEE">Employee</option>
+                            <option value="MANAGER">Manager</option>
+                            <option value="ADMIN">Admin</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-grid thirds">
+                    <div class="form-group">
+                        <label class="form-label">Department</label>
+                        <input type="text" name="department" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Designation</label>
+                        <input type="text" name="designation" class="form-control">
+                    </div>
+                    <div class="form-group" id="managerSelectGroup">
+                        <label class="form-label">Reporting Manager</label>
+                        <select name="managerId" class="form-select">
+                            <option value="">-- No Manager --</option>
+                            <option th:each="m : ${managers}" th:value="${m.id}" th:text="${m.name} + ' (' + ${m.department} + ')'"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-end pt-4" style="border-top:1px solid var(--border);">
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">System Users</h3>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User Details</th>
+                            <th>Role / Dept</th>
+                            <th>Manager</th>
+                            <th>Status</th>
+                            <th class="text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="u : ${users}">
+                            <td>
+                                <div class="d-flex align-center gap-3">
+                                    <div class="user-avatar" th:classappend="${u.role.name() == 'ADMIN' ? 'avatar-admin' : (u.role.name() == 'MANAGER' ? 'avatar-manager' : 'avatar-employee')}" th:text="${#strings.substring(u.name,0,1)}">U</div>
+                                    <div>
+                                        <div class="font-bold text-sm" th:text="${u.name}">Name</div>
+                                        <div class="text-xs text-muted" th:text="${u.email}">Email</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="font-bold text-sm" th:text="${u.role}">ROLE</div>
+                                <div class="text-xs text-muted" th:text="${u.department != null ? u.department : '-'}">Dept</div>
+                            </td>
+                            <td>
+                                <div class="text-sm" th:text="${u.manager != null ? u.manager.name : '-'}">Manager</div>
+                            </td>
+                            <td>
+                                <span class="badge" th:classappend="${u.active ? 'badge-success' : 'badge-danger'}" th:text="${u.active ? 'Active' : 'Disabled'}">Status</span>
+                            </td>
+                            <td class="text-right">
+                                <form th:if="${user.id != u.id}" th:action="@{'/admin/users/toggle/' + ${u.id}}" method="post">
+                                    <button type="submit" class="btn btn-sm" th:classappend="${u.active ? 'btn-outline' : 'btn-success'}" th:text="${u.active ? 'Disable' : 'Enable'}">Action</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('roleSelect').addEventListener('change', function() {
+            document.getElementById('managerSelectGroup').style.display = 
+                this.value === 'ADMIN' ? 'none' : 'block';
+        });
+    </script>
+</div>
+</body>
+</html>

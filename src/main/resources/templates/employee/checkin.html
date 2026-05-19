@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html th:replace="~{layout :: layout('Quarterly Check-in', ~{::div.content})}">
+<body>
+<div class="content">
+
+    <div class="card mb-6">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Progress Update</h3>
+                <div class="card-subtitle mt-1" th:text="'Cycle Year: ' + ${currentYear}">Year</div>
+            </div>
+            
+            <div class="d-flex align-center gap-3">
+                <label class="text-sm font-bold">Select Quarter:</label>
+                <form th:action="@{/employee/checkin}" method="get" class="d-flex gap-2">
+                    <select name="q" class="form-select" style="width:120px; min-height:36px; padding:6px 12px;">
+                        <option th:each="q : ${quarters}" th:value="${q}" th:text="${q}" th:selected="${q == currentQuarter}"></option>
+                    </select>
+                    <button type="submit" class="btn btn-outline btn-sm">Go</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card-body p-0">
+            <div th:if="${goalCheckins.isEmpty()}" class="empty-state">
+                <div class="empty-state-icon"><i class="fa-solid fa-lock"></i></div>
+                <div class="empty-state-title">No Approved Goals</div>
+                <div class="empty-state-text">You can only log check-ins for goals that have been approved by your manager.</div>
+            </div>
+            
+            <div class="table-wrapper" th:unless="${goalCheckins.isEmpty()}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 30%">Goal Details</th>
+                            <th style="width: 20%">Planned Target</th>
+                            <th style="width: 20%">Actual Achievement</th>
+                            <th style="width: 15%">Status</th>
+                            <th style="width: 15%" class="text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${goalCheckins}" class="goal-card">
+                            <form th:action="@{/employee/checkin/update}" method="post">
+                                <input type="hidden" name="goalId" th:value="${item.goal.id}">
+                                <input type="hidden" name="quarter" th:value="${currentQuarter}">
+                                <input type="hidden" name="year" th:value="${currentYear}">
+                                
+                                <td>
+                                    <div class="font-bold text-sm mb-1" th:text="${item.goal.title}">Title</div>
+                                    <div class="text-xs text-muted" th:text="${item.goal.uomType}">Type</div>
+                                    <div class="mt-2 text-xs" th:if="${item.checkin != null and item.checkin.managerComment != null}">
+                                        <strong class="text-primary"><i class="fa-solid fa-comment-dots"></i> Manager:</strong>
+                                        <span class="text-muted" th:text="${item.checkin.managerComment}">Comment</span>
+                                    </div>
+                                </td>
+                                
+                                <td>
+                                    <div th:if="${item.goal.uomType.name() != 'TIMELINE'}">
+                                        <div class="font-bold text-lg" th:text="${item.goal.target}">100</div>
+                                        <div class="badge badge-gray mt-1" th:if="${item.goal.uomDirection}" th:text="${item.goal.uomDirection}">MIN</div>
+                                    </div>
+                                    <div th:if="${item.goal.uomType.name() == 'TIMELINE'}">
+                                        <div class="font-bold text-sm" th:text="${#temporals.format(item.goal.targetDate, 'dd MMM yyyy')}">Date</div>
+                                    </div>
+                                    <div th:if="${item.goal.uomType.name() == 'ZERO_BASED'}">
+                                        <div class="font-bold text-lg">0</div>
+                                    </div>
+                                </td>
+                                
+                                <td>
+                                    <!-- View Mode -->
+                                    <div class="view-mode" th:if="${item.checkin != null}">
+                                        <div th:if="${item.goal.uomType.name() != 'TIMELINE'}" class="font-bold text-primary text-lg" th:text="${item.checkin.actualAchievement != null ? item.checkin.actualAchievement : '-'}">-</div>
+                                        <div th:if="${item.goal.uomType.name() == 'TIMELINE'}" class="font-bold text-primary text-sm" th:text="${item.checkin.completionDate != null ? #temporals.format(item.checkin.completionDate, 'dd MMM yyyy') : '-'}">-</div>
+                                        
+                                        <div class="progress-wrap mt-2" th:if="${item.checkin.progressScore != null}">
+                                            <div class="progress-bar" 
+                                                 th:classappend="${item.checkin.progressScore >= 1.0 ? 'success' : (item.checkin.progressScore >= 0.5 ? 'warning' : 'danger')}"
+                                                 th:style="'width:' + ${item.checkin.progressScore * 100} + '%'"></div>
+                                        </div>
+                                        <div class="text-xs text-right mt-1 text-muted" th:if="${item.checkin.progressScore != null}" th:text="${#numbers.formatDecimal(item.checkin.progressScore * 100, 1, 1)} + '% Score'">0%</div>
+                                    </div>
+                                    <div class="view-mode text-muted text-sm italic" th:if="${item.checkin == null}">Not updated yet</div>
+                                    
+                                    <!-- Edit Mode -->
+                                    <div class="edit-mode" style="display:none;">
+                                        <div th:if="${item.goal.uomType.name() != 'TIMELINE'}">
+                                            <input type="number" step="0.01" name="actualAchievement" class="form-control" placeholder="Enter actual..." 
+                                                   th:value="${item.checkin != null ? item.checkin.actualAchievement : ''}">
+                                        </div>
+                                        <div th:if="${item.goal.uomType.name() == 'TIMELINE'}">
+                                            <input type="date" name="completionDateStr" class="form-control"
+                                                   th:value="${item.checkin != null and item.checkin.completionDate != null ? item.checkin.completionDate : ''}">
+                                        </div>
+                                        
+                                        <textarea name="employeeComment" class="form-control mt-2" placeholder="Add comment (optional)..." style="min-height:60px;" th:text="${item.checkin != null ? item.checkin.employeeComment : ''}"></textarea>
+                                    </div>
+                                </td>
+                                
+                                <td>
+                                    <!-- View Mode -->
+                                    <div class="view-mode">
+                                        <span class="badge" 
+                                              th:classappend="${item.checkin == null or item.checkin.status.name() == 'NOT_STARTED' ? 'badge-gray' : (item.checkin.status.name() == 'ON_TRACK' ? 'badge-primary' : 'badge-success')}"
+                                              th:text="${item.checkin != null ? item.checkin.status : 'NOT_STARTED'}">STATUS</span>
+                                    </div>
+                                    
+                                    <!-- Edit Mode -->
+                                    <div class="edit-mode" style="display:none;">
+                                        <select name="status" class="form-select">
+                                            <option value="NOT_STARTED" th:selected="${item.checkin == null or item.checkin.status.name() == 'NOT_STARTED'}">Not Started</option>
+                                            <option value="ON_TRACK" th:selected="${item.checkin != null and item.checkin.status.name() == 'ON_TRACK'}">On Track</option>
+                                            <option value="COMPLETED" th:selected="${item.checkin != null and item.checkin.status.name() == 'COMPLETED'}">Completed</option>
+                                        </select>
+                                    </div>
+                                </td>
+                                
+                                <td class="text-right">
+                                    <button type="button" class="btn btn-outline btn-sm btn-inline-edit view-mode">Update</button>
+                                    <div class="edit-mode d-flex gap-2 justify-end" style="display:none;">
+                                        <button type="button" class="btn btn-ghost btn-sm btn-cancel-edit"><i class="fa-solid fa-xmark"></i></button>
+                                        <button type="submit" class="btn btn-success btn-sm"><i class="fa-solid fa-check"></i> Save</button>
+                                    </div>
+                                </td>
+                            </form>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

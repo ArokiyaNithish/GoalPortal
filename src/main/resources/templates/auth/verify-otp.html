@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP | AtomQuest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        body {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--primary-light) 100%);
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh;
+        }
+        .login-card {
+            background: white; padding: 40px; border-radius: 20px;
+            box-shadow: var(--shadow-lg); width: 100%; max-width: 420px;
+            text-align: center;
+        }
+        .login-logo { margin-bottom: 24px; }
+        .login-logo i { font-size: 48px; background: linear-gradient(135deg, var(--primary), var(--purple)); -webkit-background-clip: text; color: transparent; }
+        .login-title { font-size: 24px; font-weight: 800; color: var(--text-primary); margin-bottom: 8px; }
+        .login-sub { font-size: 14px; color: var(--text-secondary); margin-bottom: 32px; }
+        .login-form { text-align: left; }
+        .login-btn { width: 100%; justify-content: center; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <div class="login-logo"><i class="fa-solid fa-envelope-circle-check"></i></div>
+    <div class="login-title">Check Your Email</div>
+    <div class="login-sub">We've sent a 6-digit code to <strong th:text="${email}">your email</strong></div>
+
+    <div th:if="${error}" class="alert alert-danger" style="text-align: left;">
+        <i class="fa-solid fa-circle-exclamation mt-1"></i> <span th:text="${error}"></span>
+    </div>
+
+    <form class="login-form" th:action="@{/verify-otp}" method="post">
+        <input type="hidden" name="email" th:value="${email}">
+        
+        <div class="form-group">
+            <label class="form-label">One-Time Password (OTP)</label>
+            <input type="text" name="otp" class="form-control" placeholder="123456" required autofocus maxlength="6" style="font-size:24px; letter-spacing:4px; text-align:center;">
+        </div>
+        
+        <button type="submit" class="btn btn-primary login-btn btn-lg">Verify & Register</button>
+    </form>
+    
+    <div style="margin-top: 24px; font-size: 12px; color: var(--text-muted);">
+        <i class="fa-solid fa-lightbulb text-warning"></i> <strong>Hackathon Tip:</strong> Check your IDE console output for the OTP if the SMTP email doesn't arrive!
+    </div>
+
+</div>
+
+</body>
+</html>

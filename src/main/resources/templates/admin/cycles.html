@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html th:replace="~{layout :: layout('Goal Cycles', ~{::div.content})}">
+<body>
+<div class="content">
+
+    <div class="card mb-6" style="max-width: 800px; margin: 0 auto;">
+        <div class="card-header">
+            <h3 class="card-title">Create New Cycle</h3>
+        </div>
+        
+        <div class="card-body">
+            <form th:action="@{/admin/cycles/create}" method="post">
+                <div class="form-grid thirds">
+                    <div class="form-group">
+                        <label class="form-label">Cycle Name <span class="required">*</span></label>
+                        <input type="text" name="cycleName" class="form-control" required placeholder="e.g. FY 2025-26">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Year <span class="required">*</span></label>
+                        <input type="number" name="cycleYear" class="form-control" required th:value="${#dates.year(#dates.createNow())}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phase <span class="required">*</span></label>
+                        <select name="phase" class="form-select" required>
+                            <option th:each="p : ${phases}" th:value="${p}" th:text="${p}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Window Opens <span class="required">*</span></label>
+                        <input type="date" name="windowOpen" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Window Closes <span class="required">*</span></label>
+                        <input type="date" name="windowClose" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <input type="text" name="description" class="form-control" placeholder="Optional description...">
+                </div>
+
+                <div class="d-flex align-center gap-2 mt-2 mb-4">
+                    <input type="checkbox" name="active" value="true" id="activeCb" style="width:16px;height:16px;">
+                    <label for="activeCb" class="form-label mb-0" style="cursor:pointer;">Set as Active Cycle immediately</label>
+                </div>
+
+                <div class="d-flex justify-end pt-4" style="border-top:1px solid var(--border);">
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Create Cycle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">All Goal Cycles</h3>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cycle Name</th>
+                            <th>Phase & Year</th>
+                            <th>Window</th>
+                            <th>Status</th>
+                            <th class="text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="cycle : ${cycles}">
+                            <td>
+                                <div class="font-bold text-sm" th:text="${cycle.cycleName}">Name</div>
+                                <div class="text-xs text-muted" th:text="${cycle.description}">Desc</div>
+                            </td>
+                            <td>
+                                <div class="font-bold" th:text="${cycle.phase}">Phase</div>
+                                <div class="text-xs text-muted" th:text="${cycle.cycleYear}">Year</div>
+                            </td>
+                            <td>
+                                <div class="text-sm" th:text="${#temporals.format(cycle.windowOpen, 'dd MMM yyyy')} + ' to ' + ${#temporals.format(cycle.windowClose, 'dd MMM yyyy')}">Dates</div>
+                            </td>
+                            <td>
+                                <span class="badge" th:classappend="${cycle.active ? 'badge-success' : 'badge-gray'}" th:text="${cycle.active ? 'ACTIVE' : 'INACTIVE'}">Status</span>
+                            </td>
+                            <td class="text-right">
+                                <form th:if="${!cycle.active}" th:action="@{'/admin/cycles/activate/' + ${cycle.id}}" method="post">
+                                    <button type="submit" class="btn btn-outline btn-sm" data-confirm="Are you sure you want to activate this cycle? It will deactivate the currently active cycle.">Activate</button>
+                                </form>
+                                <button th:if="${cycle.active}" class="btn btn-ghost btn-sm disabled" disabled>Active</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

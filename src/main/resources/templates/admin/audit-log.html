@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html th:replace="~{layout :: layout('Audit Logs', ~{::div.content})}">
+<body>
+<div class="content">
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">System Audit Trail</h3>
+            <div class="card-subtitle">Immutable log of all critical actions</div>
+        </div>
+        
+        <div class="card-body p-0">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Action</th>
+                            <th>Performed By</th>
+                            <th>Goal ID</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="log : ${auditLogs}">
+                            <td class="text-xs text-muted whitespace-nowrap" style="white-space:nowrap;" th:text="${#temporals.format(log.timestamp, 'dd MMM yyyy HH:mm:ss')}">Time</td>
+                            <td>
+                                <span class="badge" 
+                                      th:classappend="${#strings.contains(log.action, 'APPROVE') ? 'badge-success' : (#strings.contains(log.action, 'UPDATE') ? 'badge-primary' : (#strings.contains(log.action, 'DELETE') ? 'badge-danger' : 'badge-gray'))}"
+                                      th:text="${log.action}">ACTION</span>
+                            </td>
+                            <td class="font-bold text-sm" th:text="${log.performedBy.name}">User</td>
+                            <td th:text="${log.goal != null ? '#' + log.goal.id : '-'}">#ID</td>
+                            <td>
+                                <div class="text-sm" th:text="${log.description}">Description</div>
+                                <div th:if="${log.oldValue != null and log.newValue != null}" class="text-xs mt-1 p-2 rounded border" style="background:#f9fafb;">
+                                    <div class="text-danger"><s>Old: <span th:text="${log.oldValue}">old</span></s></div>
+                                    <div class="text-success mt-1">New: <span th:text="${log.newValue}">new</span></div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${auditLogs.isEmpty()}">
+                            <td colspan="5" class="text-center text-muted p-4">No audit logs found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

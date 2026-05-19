@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html th:replace="~{layout :: layout('Goal Exceptions (Unlock)', ~{::div.content})}">
+<body>
+<div class="content">
+
+    <div class="card mb-6">
+        <div class="card-header">
+            <h3 class="card-title">All System Goals</h3>
+            <div class="card-subtitle mt-1">Unlock approved goals for edits or push admin-level KPIs</div>
+        </div>
+        
+        <div class="card-body p-0">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Goal ID / Details</th>
+                            <th>Employee</th>
+                            <th>Manager</th>
+                            <th>Status</th>
+                            <th class="text-right">Admin Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="goal : ${goals}">
+                            <td>
+                                <div class="text-xs text-muted">ID: <span th:text="${goal.id}">#</span></div>
+                                <div class="font-bold text-sm mt-1" th:text="${goal.title}">Title</div>
+                                <div class="text-xs text-muted" th:text="${goal.weightage} + '% | ' + ${goal.uomType}">Details</div>
+                            </td>
+                            <td>
+                                <div class="text-sm font-bold" th:text="${goal.user.name}">Name</div>
+                                <div class="text-xs text-muted" th:text="${goal.user.department}">Dept</div>
+                            </td>
+                            <td>
+                                <div class="text-sm" th:text="${goal.user.manager != null ? goal.user.manager.name : '-'}">Manager</div>
+                            </td>
+                            <td>
+                                <span class="badge" 
+                                      th:classappend="${goal.status.name() == 'APPROVED' ? 'badge-success' : (goal.status.name() == 'SUBMITTED' ? 'badge-warning' : (goal.status.name() == 'REWORK' ? 'badge-danger' : 'badge-gray'))}"
+                                      th:text="${goal.status}">STATUS</span>
+                                <div class="text-xs text-primary mt-1" th:if="${goal.isLocked()}"><i class="fa-solid fa-lock"></i> Locked</div>
+                            </td>
+                            <td class="text-right">
+                                <form th:if="${goal.isLocked()}" th:action="@{'/admin/goals/unlock/' + ${goal.id}}" method="post">
+                                    <button type="submit" class="btn btn-warning btn-sm" data-confirm="Are you sure you want to unlock this goal? It will be sent back to REWORK status.">
+                                        <i class="fa-solid fa-unlock-keyhole"></i> Unlock
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${goals.isEmpty()}">
+                            <td colspan="5" class="text-center text-muted p-4">No goals in the system yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

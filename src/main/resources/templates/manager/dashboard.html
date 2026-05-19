@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html th:replace="~{layout :: layout('Team Overview', ~{::div.content})}">
+<body>
+<div class="content">
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon primary"><i class="fa-solid fa-users"></i></div>
+            </div>
+            <div class="stat-value" th:text="${teamSize}">0</div>
+            <div class="stat-label">Team Members</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon warning"><i class="fa-solid fa-clipboard-question"></i></div>
+            </div>
+            <div class="stat-value" th:text="${pendingApproval}">0</div>
+            <div class="stat-label">Pending Goal Approvals</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon success"><i class="fa-solid fa-check-double"></i></div>
+            </div>
+            <div class="stat-value" th:text="${approvedGoals}">0</div>
+            <div class="stat-label">Approved Goals</div>
+        </div>
+    </div>
+
+    <div class="chart-grid">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Team Goal Statuses</h3>
+            </div>
+            <div class="card-body chart-container">
+                <canvas id="teamStatusChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Quick Actions</h3>
+            </div>
+            <div class="card-body">
+                <div class="d-flex" style="flex-direction:column; gap:12px;">
+                    <a th:href="@{/manager/goals/pending}" class="btn btn-warning w-100 justify-between">
+                        <span><i class="fa-solid fa-clipboard-check mr-2"></i> Review Pending Goals</span>
+                        <span class="badge" style="background:rgba(0,0,0,0.1); color:inherit;" th:text="${pendingApproval}">0</span>
+                    </a>
+                    <a th:href="@{/manager/team}" class="btn btn-primary w-100 justify-between">
+                        <span><i class="fa-solid fa-chart-line mr-2"></i> View Member Check-ins</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                    <a th:href="@{/manager/shared-goal}" class="btn btn-purple w-100 justify-between">
+                        <span><i class="fa-solid fa-share-nodes mr-2"></i> Push Shared KPI</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+                
+                <hr class="divider">
+                
+                <h4 class="text-sm font-bold mb-3">Your Team</h4>
+                <div style="max-height:180px; overflow-y:auto; flex-direction:column; gap:10px;" class="d-flex">
+                    <div th:each="member : ${team}" class="d-flex align-center gap-3 p-2 border border-gray-200 rounded" style="border-radius:var(--radius-sm);">
+                        <div class="user-avatar avatar-employee" style="width:32px; height:32px; font-size:12px;" th:text="${#strings.substring(member.name,0,1)}">U</div>
+                        <div class="flex-1 truncate">
+                            <div class="text-sm font-bold" th:text="${member.name}">Name</div>
+                            <div class="text-xs text-muted" th:text="${member.designation}">Role</div>
+                        </div>
+                        <a th:href="@{'/manager/checkin/' + ${member.id}}" class="btn btn-ghost btn-sm btn-icon"><i class="fa-regular fa-eye"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        document.addEventListener('DOMContentLoaded', () => {
+            const statusDist = /*[[${statusDistribution}]]*/ {};
+            
+            const labels = [];
+            const data = [];
+            const colors = [];
+            
+            const colorMap = {
+                'APPROVED': '#10B981',
+                'SUBMITTED': '#F59E0B',
+                'DRAFT': '#9CA3AF',
+                'REWORK': '#EF4444'
+            };
+            
+            for(const [status, count] of Object.entries(statusDist)) {
+                labels.push(status);
+                data.push(count);
+                colors.push(colorMap[status] || '#CBD5E1');
+            }
+            
+            if(data.length > 0) {
+                createDoughnutChart('teamStatusChart', labels, data, colors);
+            }
+        });
+        /*]]>*/
+    </script>
+</div>
+</body>
+</html>

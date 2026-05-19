@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title, content)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' | AtomQuest'">AtomQuest Goal Portal</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="app-shell">
+    
+    <!-- Mobile Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <a href="#" class="brand-logo">
+                <div class="brand-icon"><i class="fa-solid fa-bullseye"></i></div>
+                <div>
+                    <div class="brand-text">ATOMQUEST</div>
+                    <div class="brand-sub">Goal Tracking Portal</div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="sidebar-user" th:if="${user}">
+            <div class="user-avatar" 
+                 th:classappend="${user.role.name() == 'ADMIN' ? 'avatar-admin' : (user.role.name() == 'MANAGER' ? 'avatar-manager' : 'avatar-employee')}"
+                 th:text="${#strings.substring(user.name,0,1)}">U</div>
+            <div class="truncate">
+                <div class="user-name truncate" th:text="${user.name}">User Name</div>
+                <div class="user-role" th:text="${user.role}">ROLE</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav" th:if="${user}">
+            
+            <!-- Employee Navigation -->
+            <th:block th:if="${user.role.name() == 'EMPLOYEE'}">
+                <div class="nav-section-label">My Workspace</div>
+                <a th:href="@{/employee/dashboard}" class="nav-item">
+                    <i class="fa-solid fa-house nav-icon"></i> Dashboard
+                </a>
+                <a th:href="@{/employee/goals}" class="nav-item">
+                    <i class="fa-solid fa-list-check nav-icon"></i> My Goals
+                </a>
+                <a th:href="@{/employee/checkin}" class="nav-item">
+                    <i class="fa-solid fa-chart-line nav-icon"></i> Quarterly Check-in
+                </a>
+            </th:block>
+
+            <!-- Manager Navigation -->
+            <th:block th:if="${user.role.name() == 'MANAGER'}">
+                <div class="nav-section-label">Team Management</div>
+                <a th:href="@{/manager/dashboard}" class="nav-item">
+                    <i class="fa-solid fa-users nav-icon"></i> Team Overview
+                </a>
+                <a th:href="@{/manager/goals/pending}" class="nav-item">
+                    <i class="fa-solid fa-clipboard-check nav-icon"></i> Pending Approvals
+                    <span class="nav-badge" th:if="${pendingApproval > 0}" th:text="${pendingApproval}">3</span>
+                </a>
+                <a th:href="@{/manager/team}" class="nav-item">
+                    <i class="fa-solid fa-user-group nav-icon"></i> Member Check-ins
+                </a>
+                <a th:href="@{/manager/shared-goal}" class="nav-item">
+                    <i class="fa-solid fa-share-nodes nav-icon"></i> Shared Goals
+                </a>
+            </th:block>
+
+            <!-- Admin Navigation -->
+            <th:block th:if="${user.role.name() == 'ADMIN'}">
+                <div class="nav-section-label">Administration</div>
+                <a th:href="@{/admin/dashboard}" class="nav-item">
+                    <i class="fa-solid fa-gauge-high nav-icon"></i> Admin Dashboard
+                </a>
+                <a th:href="@{/admin/cycles}" class="nav-item">
+                    <i class="fa-solid fa-calendar-days nav-icon"></i> Goal Cycles
+                </a>
+                <a th:href="@{/admin/users}" class="nav-item">
+                    <i class="fa-solid fa-users-gear nav-icon"></i> User Management
+                </a>
+                <a th:href="@{/admin/goals}" class="nav-item">
+                    <i class="fa-solid fa-unlock-keyhole nav-icon"></i> Goal Exceptions
+                </a>
+                <a th:href="@{/admin/reports}" class="nav-item">
+                    <i class="fa-solid fa-file-export nav-icon"></i> Reports
+                </a>
+                <a th:href="@{/admin/audit-log}" class="nav-item">
+                    <i class="fa-solid fa-clock-rotate-left nav-icon"></i> Audit Logs
+                </a>
+            </th:block>
+
+        </nav>
+        
+        <div class="sidebar-footer" th:if="${user}">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-ghost w-100 justify-center">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <main class="main-content">
+        
+        <!-- Topbar -->
+        <header class="topbar">
+            <button class="topbar-toggle" id="sidebarToggle">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="topbar-title">
+                <span th:text="${title}">Page Title</span>
+                <div class="topbar-subtitle" th:if="${activeCycle != null}" th:text="'Active Cycle: ' + ${activeCycle.cycleName} + ' (' + ${activeCycle.phase} + ')'">Cycle info</div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content injected here -->
+        <div class="page-content">
+            
+            <!-- Global Flash Messages -->
+            <div th:if="${success}" class="alert alert-success" data-auto-dismiss>
+                <i class="fa-solid fa-circle-check mt-1"></i> <span th:text="${success}">Success msg</span>
+            </div>
+            <div th:if="${error}" class="alert alert-danger" data-auto-dismiss>
+                <i class="fa-solid fa-circle-exclamation mt-1"></i> <span th:text="${error}">Error msg</span>
+            </div>
+
+            <div th:replace="${content}"></div>
+            
+        </div>
+    </main>
+</div>
+
+<!-- Custom JS -->
+<script th:src="@{/js/app.js}"></script>
+
+</body>
+</html>

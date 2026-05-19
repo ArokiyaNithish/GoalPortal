@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html th:replace="~{layout :: layout('Employee Check-in Review', ~{::div.content})}">
+<body>
+<div class="content">
+
+    <div class="card mb-6">
+        <div class="card-header">
+            <div class="d-flex align-center gap-3">
+                <a th:href="@{/manager/team}" class="btn btn-ghost btn-icon"><i class="fa-solid fa-arrow-left"></i></a>
+                <div>
+                    <h3 class="card-title" th:text="${employee.name} + ' - Check-ins'">Employee - Check-ins</h3>
+                    <div class="card-subtitle mt-1" th:text="${currentQuarter} + ' ' + ${currentYear}">Q1 2025</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body p-0">
+            <div th:if="${goalCheckins.isEmpty()}" class="empty-state">
+                <div class="empty-state-icon"><i class="fa-solid fa-folder-open"></i></div>
+                <div class="empty-state-title">No Goals Found</div>
+                <div class="empty-state-text">This employee has no goals assigned or approved for the current cycle.</div>
+            </div>
+            
+            <div class="table-wrapper" th:unless="${goalCheckins.isEmpty()}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 25%">Goal Details</th>
+                            <th style="width: 15%">Target</th>
+                            <th style="width: 20%">Employee Update</th>
+                            <th style="width: 15%">Score & Status</th>
+                            <th style="width: 25%">Manager Feedback</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${goalCheckins}">
+                            <!-- Goal Details -->
+                            <td>
+                                <div class="font-bold text-sm mb-1" th:text="${item.goal.title}">Title</div>
+                                <div class="text-xs text-muted">
+                                    <span th:text="${item.goal.thrustArea}">Area</span> | 
+                                    <span th:text="${item.goal.weightage} + '% wt'">10% wt</span>
+                                </div>
+                            </td>
+                            
+                            <!-- Target -->
+                            <td>
+                                <div class="text-xs text-muted" th:text="${item.goal.uomType}">Type</div>
+                                <div th:if="${item.goal.uomType.name() != 'TIMELINE'}" class="font-bold text-sm text-primary mt-1" th:text="${item.goal.target}">100</div>
+                                <div th:if="${item.goal.uomType.name() == 'TIMELINE'}" class="font-bold text-xs text-primary mt-1" th:text="${#temporals.format(item.goal.targetDate, 'dd MMM yyyy')}">Date</div>
+                            </td>
+                            
+                            <!-- Employee Update -->
+                            <td>
+                                <div th:if="${item.checkin != null}">
+                                    <div th:if="${item.goal.uomType.name() != 'TIMELINE'}" class="font-bold text-sm">
+                                        Actual: <span class="text-primary" th:text="${item.checkin.actualAchievement}">0</span>
+                                    </div>
+                                    <div th:if="${item.goal.uomType.name() == 'TIMELINE'}" class="font-bold text-xs">
+                                        Done: <span class="text-primary" th:text="${item.checkin.completionDate != null ? #temporals.format(item.checkin.completionDate, 'dd MMM') : '-'}">-</span>
+                                    </div>
+                                    
+                                    <div th:if="${item.checkin.employeeComment != null and !item.checkin.employeeComment.isEmpty()}" class="text-xs mt-2 p-2 bg-gray-50 border rounded" style="background:var(--bg-secondary); border:1px solid var(--border-light); border-radius:4px;">
+                                        <i class="fa-solid fa-quote-left text-muted mr-1"></i> <span th:text="${item.checkin.employeeComment}">Comment</span>
+                                    </div>
+                                </div>
+                                <div th:if="${item.checkin == null}" class="text-xs text-muted italic">No update provided</div>
+                            </td>
+                            
+                            <!-- Score & Status -->
+                            <td>
+                                <div th:if="${item.checkin != null}">
+                                    <span class="badge mb-2" 
+                                          th:classappend="${item.checkin.status.name() == 'NOT_STARTED' ? 'badge-gray' : (item.checkin.status.name() == 'ON_TRACK' ? 'badge-primary' : 'badge-success')}"
+                                          th:text="${item.checkin.status}">STATUS</span>
+                                          
+                                    <div th:if="${item.checkin.progressScore != null}">
+                                        <div class="font-bold text-xs" th:classappend="${item.checkin.progressScore >= 1.0 ? 'text-success' : (item.checkin.progressScore >= 0.5 ? 'text-warning' : 'text-danger')}" th:text="${#numbers.formatDecimal(item.checkin.progressScore * 100, 1, 1)} + '% Score'">0%</div>
+                                        <div class="progress-wrap mt-1">
+                                            <div class="progress-bar" 
+                                                 th:classappend="${item.checkin.progressScore >= 1.0 ? 'success' : (item.checkin.progressScore >= 0.5 ? 'warning' : 'danger')}"
+                                                 th:style="'width:' + ${item.checkin.progressScore * 100} + '%'"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div th:if="${item.checkin == null}">-</div>
+                            </td>
+                            
+                            <!-- Manager Feedback -->
+                            <td>
+                                <div th:if="${item.checkin != null}">
+                                    <form th:action="@{'/manager/checkin/comment/' + ${item.checkin.id}}" method="post">
+                                        <input type="hidden" name="employeeId" th:value="${employee.id}">
+                                        <div class="d-flex gap-2">
+                                            <textarea name="managerComment" class="form-control text-xs" placeholder="Add feedback..." style="min-height:40px; padding:6px; flex:1;" th:text="${item.checkin.managerComment}"></textarea>
+                                            <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-paper-plane"></i></button>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div th:if="${item.checkin == null}" class="text-xs text-muted">
+                                    Employee must submit check-in first.
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

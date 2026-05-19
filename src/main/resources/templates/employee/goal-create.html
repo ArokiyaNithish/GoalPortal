@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html th:replace="~{layout :: layout('Create Goal', ~{::div.content})}">
+<body>
+<div class="content">
+
+    <div class="card" style="max-width: 800px; margin: 0 auto;">
+        <div class="card-header">
+            <h3 class="card-title">Create New Goal</h3>
+            <a th:href="@{/employee/goals}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
+        </div>
+        
+        <div class="card-body">
+            
+            <div class="weightage-meter">
+                <div class="meter-label">
+                    <span>Available Weightage</span>
+                    <span class="weightage-value" th:text="${remainingWeightage} + '%'">0%</span>
+                </div>
+                <div class="progress-wrap">
+                    <div class="progress-bar primary" th:style="'width:' + (100 - remainingWeightage) + '%'"></div>
+                </div>
+            </div>
+
+            <form th:action="@{/employee/goals/create}" method="post" th:object="${goal}">
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Thrust Area <span class="required">*</span></label>
+                        <select th:field="*{thrustArea}" class="form-select" required>
+                            <option value="">Select Thrust Area...</option>
+                            <option th:each="area : ${thrustAreas}" th:value="${area}" th:text="${area}"></option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Weightage (%) <span class="required">*</span></label>
+                        <input type="number" step="0.5" min="10" th:max="${remainingWeightage}" th:field="*{weightage}" class="form-control" required placeholder="Min 10%">
+                        <div class="form-hint">Min 10%. Max available: <span th:text="${remainingWeightage}">0</span>%</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Goal Title <span class="required">*</span></label>
+                    <input type="text" th:field="*{title}" class="form-control" required placeholder="e.g. Increase Sales Revenue">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea th:field="*{description}" class="form-control" placeholder="Provide details on how this will be achieved..."></textarea>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="form-grid thirds">
+                    <div class="form-group">
+                        <label class="form-label">Unit of Measurement (UoM) <span class="required">*</span></label>
+                        <select th:field="*{uomType}" class="form-select" id="uomType" required>
+                            <option th:each="type : ${uomTypes}" th:value="${type}" th:text="${type}"></option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="directionField">
+                        <label class="form-label">Direction <span class="required">*</span></label>
+                        <select th:field="*{uomDirection}" class="form-select">
+                            <option value="MIN">Higher is Better (e.g. Revenue)</option>
+                            <option value="MAX">Lower is Better (e.g. Defects)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="numericFields">
+                        <label class="form-label">Target Value <span class="required">*</span></label>
+                        <input type="number" step="0.01" th:field="*{target}" class="form-control" placeholder="e.g. 100000">
+                    </div>
+                    
+                    <div class="form-group" id="timelineFields" style="display:none;">
+                        <label class="form-label">Target Date <span class="required">*</span></label>
+                        <input type="date" name="targetDateStr" class="form-control">
+                    </div>
+                </div>
+                
+                <div id="zeroFields" style="display:none;" class="alert alert-info mt-2 mb-4">
+                    <i class="fa-solid fa-circle-info mt-1"></i>
+                    <div><strong>Zero-based Goal:</strong> Target is implicitly set to 0. Any achievement above 0 will result in 0% progress. Ideal for tracking defects, safety incidents, etc.</div>
+                </div>
+
+                <div class="d-flex justify-between mt-4 pt-4" style="border-top:1px solid var(--border);">
+                    <a th:href="@{/employee/goals}" class="btn btn-ghost">Cancel</a>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Save Goal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
